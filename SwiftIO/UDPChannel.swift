@@ -116,12 +116,14 @@ public class UDPChannel {
 
     public func cancel() {
         assert(source != nil, "Cancel called with source = nil.")
+        assert(resumed == true)
 
         dispatch_source_cancel(source)
     }
 
     public func send(data:NSData, address:Address! = nil, writeHandler:((Bool,NSError?) -> Void)? = loggingWriteHandler) {
         precondition(queue != nil, "Cannot send data without a queue")
+        precondition(resumed == true, "Cannot send data on unresumed queue")
 
         dispatch_async(queue) {
 
