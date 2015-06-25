@@ -55,7 +55,7 @@ public extension NSData {
     convenience init?(hexString string:String) {
         let outputBuffer = string.withCString() {
             (buffer: UnsafeBufferPointer <Int8>) -> UnsafeMutableBufferPointer <UInt8>! in
-            if var outputBuffer = UnsafeMutableBufferPointer <UInt8>.alloc(buffer.count / 2) {
+            if let outputBuffer = UnsafeMutableBufferPointer <UInt8>.alloc(buffer.count / 2) {
                 var P = outputBuffer.baseAddress
                 var hiNibble = true
                 for hexNibble in buffer {

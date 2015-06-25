@@ -44,7 +44,7 @@ public enum ProtocolFamily {
 extension Address: Printable {
     public var description: String {
         get {
-            return "\(hostname!):\(port!)"
+            return "\(hostname!):\(service!)"
         }
     }
 }
@@ -143,12 +143,12 @@ public extension Address {
      
      This is a "nice" wrapper around POSIX.getaddrinfo.
 
-     :param: hostname   <#hostname description#>
-     :param: service    <#service description#>
-     :param: `protocol` <#`protocol` description#>
-     :param: family     <#family description#>
+     - parameter hostname:   <#hostname description#>
+     - parameter service:    <#service description#>
+     - parameter `protocol`: <#`protocol` description#>
+     - parameter family:     <#family description#>
 
-     :returns: <#return value description#>
+     - returns: <#return value description#>
      */
     static func addresses(hostname:String, service:String, `protocol`:InetProtocol = .TCP, family:ProtocolFamily? = nil) -> [Address] {
         var addresses:[Address] = []
@@ -160,17 +160,14 @@ public extension Address {
             hints.ai_family = family.rawValue
         }
 
-        var buffer: Buffer <sockaddr>?
-
-        var info = UnsafeMutablePointer<addrinfo>()
-        let result = getaddrinfo(hostname, service, hints) {
+        let result = getaddrinfo(hostname, service: service, hints: hints) {
             let ptr = UnsafePointer <sockaddr> ($0.memory.ai_addr)
-
             let address = Address(addr: ptr, addrlen: $0.memory.ai_addrlen)
             addresses.append(address)
-
             return true
         }
+
+        assert(result == 0)
 
         return addresses
     }

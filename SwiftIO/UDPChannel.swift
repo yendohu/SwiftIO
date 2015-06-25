@@ -49,9 +49,12 @@ public class UDPChannel {
         self.address = address
     }
 
-    public convenience init(hostname:String, port:Int16, family:ProtocolFamily? = nil) {
+    public convenience init(hostname:String = "0.0.0.0", port:Int16, family:ProtocolFamily? = nil, readHandler:(Datagram -> Void)? = nil) {
         let addresses = Address.addresses(hostname, service:"\(port)", `protocol`: .UDP, family: family)
         self.init(address:addresses[0])
+        if let readHandler = readHandler {
+            self.readHandler = readHandler
+        }
     }
 
     public func resume() {
@@ -97,7 +100,7 @@ public class UDPChannel {
 
         dispatch_source_set_registration_handler(source) {
             debugLog?("Registration handler")
-            var sockaddr = self.address.addr
+            let sockaddr = self.address.addr
 
             let result = Darwin.bind(self.socket, sockaddr.pointer, socklen_t(sockaddr.length))
             if result != 0 {
@@ -146,7 +149,7 @@ public class UDPChannel {
 
     internal func read() {
 
-        var data:NSMutableData! = NSMutableData(length: 4096)
+        let data:NSMutableData! = NSMutableData(length: 4096)
 
         let address = Address.with() {
             (addr:UnsafeMutablePointer<sockaddr>, inout addrlen:socklen_t) -> Void in
