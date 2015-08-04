@@ -23,6 +23,10 @@ public struct Datagram {
 
 // MARK: -
 
+public var debugLog:(AnyObject? -> Void)? = println
+
+// MARK: -
+
 /**
  *  A GCD based UDP listener.
  */
@@ -36,6 +40,7 @@ public class UDPChannel {
     public var readHandler:(Datagram -> Void)? = loggingReadHandler
     public var errorHandler:(NSError -> Void)? = loggingErrorHandler
 
+    private var resumed:Bool = false
     private var queue:dispatch_queue_t!
     private var source:dispatch_source_t!
     private var socket:Int32!
@@ -50,6 +55,8 @@ public class UDPChannel {
     }
 
     public func resume() {
+        debugLog?("Resuming")
+
         socket = Darwin.socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)
         if socket < 0 {
             handleError(code:.unknown, description: "TODO")
@@ -79,7 +86,9 @@ public class UDPChannel {
         }
 
         dispatch_source_set_cancel_handler(source) {
+            debugLog?("Cancel handler")
             self.cleanup()
+            self.resumed = false
         }
 
         dispatch_source_set_event_handler(source) {
@@ -87,6 +96,7 @@ public class UDPChannel {
         }
 
         dispatch_source_set_registration_handler(source) {
+            debugLog?("Registration handler")
             var sockaddr = self.address.addr
 
             let result = Darwin.bind(self.socket, sockaddr.pointer, socklen_t(sockaddr.length))
@@ -96,17 +106,28 @@ public class UDPChannel {
                 self.cancel()
                 return
             }
+
+            self.resumed = true
+            debugLog?("We're good to go!")
         }
 
         dispatch_resume(source)
     }
 
     public func cancel() {
+        assert(source != nil, "Cancel called with source = nil.")
+        assert(resumed == true)
+
         dispatch_source_cancel(source)
     }
 
     public func send(data:NSData, address:Address! = nil, writeHandler:((Bool,NSError?) -> Void)? = loggingWriteHandler) {
+        precondition(queue != nil, "Cannot send data without a queue")
+        precondition(resumed == true, "Cannot send data on unresumed queue")
+
         dispatch_async(queue) {
+
+            debugLog?("Send")
 
             let address:Address = address ?? self.address
             var sockaddr = address.addr
@@ -168,16 +189,16 @@ public class UDPChannel {
 // MARK: -
 
 internal func loggingReadHandler(datagram:Datagram) {
-    println("READ")
+    debugLog?("READ")
 }
 
 internal func loggingErrorHandler(error:NSError) {
-    println("ERROR: \(error)")
+    debugLog?("ERROR: \(error)")
 }
 
 internal func loggingWriteHandler(success:Bool, error:NSError?) {
     if success {
-        println("WRITE")
+        debugLog?("WRITE")
     }
     else {
         loggingErrorHandler(error!)
