@@ -373,6 +373,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_NAME = SwiftIO;
 				SKIP_INSTALL = YES;
+				SWIFT_INCLUDE_PATHS = "$(SOURCE_ROOT)/SwiftIO";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -390,6 +391,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_NAME = SwiftIO;
 				SKIP_INSTALL = YES;
+				SWIFT_INCLUDE_PATHS = "$(SOURCE_ROOT)/SwiftIO";
 			};
 			name = Release;
 		};
